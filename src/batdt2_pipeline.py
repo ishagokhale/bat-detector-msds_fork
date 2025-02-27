@@ -279,7 +279,9 @@ def open_and_get_call_info(audio_file, dets):
     welch_key = 'all_locations'
     output_dir = Path(f'{Path(__file__).parent}/../../duty-cycle-investigation/data/generated_welch/{welch_key}')
     output_file_type = 'top1_inbouts_welch_signals'
-    welch_data = pd.read_csv(output_dir / f'2022_{welch_key}_{output_file_type}.csv', index_col=0, low_memory=False)
+    #welch_data = pd.read_csv(output_dir / f'2022_{welch_key}_{output_file_type}.csv', index_col=0, low_memory=False)
+    welch_data = pd.read_csv('2022_all_locations_top1_inbouts_welch_signals.csv', index_col = 0, low_memory = False)
+    
     k = 2
     kmean_welch = KMeans(n_clusters=k, n_init=10, random_state=1).fit(welch_data.values)
 
@@ -433,6 +435,8 @@ def _save_predictions(annotation_df, output_dir, cfg):
 
     csv_path = output_dir / filename
     annotation_df.to_csv(csv_path, sep=sep, index=False)
+    print('this is csv path')
+    print(csv_path)
     return csv_path
 
 def convert_df_ravenpro(df: pd.DataFrame):
@@ -745,8 +749,11 @@ def run_pipeline_on_file(file, cfg):
         segmented_file_paths = generate_segmented_paths([file], cfg)
         file_path_mappings = initialize_mappings(segmented_file_paths, cfg)
         bd_preds = run_models(file_path_mappings)
-        if cfg['save']:
+        save = True
+        if save:
             _save_predictions(bd_preds, cfg['output_dir'], cfg)
+            print('cfg[out_file]')
+            print(cfg['output_dir'])
         delete_segments(segmented_file_paths)
 
     return bd_preds
@@ -1068,8 +1075,9 @@ def parse_args():
 
 
 if __name__ == "__main__":
+    print('in main')
     args = parse_args()
-    
+    print(args['input_audio'])
     cfg = get_config()
     cfg["input_audio"] = args['input_audio']
     cfg["recover_folder"] = args["recover_folder"]
@@ -1091,6 +1099,7 @@ if __name__ == "__main__":
 
     if cfg['input_audio']!='none':
         if Path(cfg['input_audio']).is_file():
+            print('detected input audio file')
             run_pipeline_on_file(Path(cfg['input_audio']), cfg)
         elif Path(cfg['input_audio']).is_dir():
             input_dir = Path(cfg['input_audio'])
